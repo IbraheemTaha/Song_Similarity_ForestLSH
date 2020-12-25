@@ -1,6 +1,7 @@
 # Song Similarity using Forest-LSH
 
-Song Similarity is a Python implementation to find number of similar songs within the songs set provided in the file **_songsData.csv_**
+Song Similarity is a Python implementation of Forest-LSH to find number of similar songs within the songs set provided in the file **_songsData.csv_** .
+I will add some related projects in the future, keep tuned!
 
 
 ## Usage
