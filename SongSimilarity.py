@@ -9,7 +9,54 @@ from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 
 from datasketch import MinHash, MinHashLSHForest
 
+def main():
+    ###  Number of similar songs
+    numOfSimSongs = 5
+    outputFile = 'similarsongs.csv'
 
+    numOfSimSongs, outputFile = getArguments(numOfSimSongs, outputFile)
+
+    ### Reading data
+    print("Loading the Data File")
+    songsDataFrame = pd.read_csv('songsData.csv', sep=',')
+    print("Finished Loading the Data File\n")
+
+    ### If you want to add the title of the song in the process
+    songsDataFrame = songsDataFrame['song'].str.cat(songsDataFrame['text'], sep=" ")
+
+    ### adding the song's lyrics only
+    # songsDataFrame = songsDataFrame['text']
+
+    ### Converting the data frame into array list for better and easier handling
+    songsList = songsDataFrame.values.tolist()
+
+    ### simSongList had the ID and the number of similar songs (Building the data frame)
+    similarSongHeader = ['ID']
+    for i in range(numOfSimSongs):
+        similarSongHeader.append("song" + str(i + 1))
+
+    print("Data Cleaning")
+    start_time = timeit.default_timer()
+    cleanSongList = toCleanData(songsList)
+    print("Data Cleaning took %s seconds ---" % (timeit.default_timer() - start_time))
+
+    print("Building LSH")
+    start_time = timeit.default_timer()
+    forestLSH, minHashList = toBuildLSH(cleanSongList)
+    print("Building LSH took %s seconds ---" % (timeit.default_timer() - start_time))
+
+    print("Querying the similar songs")
+    similarSongsIdList = toQuerySimilarSongs(forestLSH, minHashList, numOfSimSongs)
+    print("Querying took %s seconds ---" % (timeit.default_timer() - start_time))
+
+    print("Saving results to the file: %s" % outputFile)
+    ### saving the result in a dataframe shape
+    results_df = pd.DataFrame(similarSongsIdList, columns=similarSongHeader)
+    ### writing the dataframe onto the file named in the variable simFile
+    results_df.to_csv(outputFile, sep=',', encoding='utf-8')
+    print("Finished saving the results \n")
+
+    
 ### cleaning function to tokenize, remove stopwords
 def toCleanData(songsList):
     '''
@@ -95,55 +142,6 @@ def getArguments(numOfSimSongs, outputFile):
         outputFile = args.output
 
     return numOfSimSongs, outputFile
-
-
-def main():
-    ###  Number of similar songs
-    numOfSimSongs = 5
-    outputFile = 'similarsongs.csv'
-
-    numOfSimSongs, outputFile = getArguments(numOfSimSongs, outputFile)
-
-    ### Reading data
-    print("Loading the Data File")
-    songsDataFrame = pd.read_csv('songsData.csv', sep=',')
-    print("Finished Loading the Data File\n")
-
-    ### If you want to add the title of the song in the process
-    songsDataFrame = songsDataFrame['song'].str.cat(songsDataFrame['text'], sep=" ")
-
-    ### adding the song's lyrics only
-    # songsDataFrame = songsDataFrame['text']
-
-    ### Converting the data frame into array list for better and easier handling
-    songsList = songsDataFrame.values.tolist()
-
-    ### simSongList had the ID and the number of similar songs (Building the data frame)
-    similarSongHeader = ['ID']
-    for i in range(numOfSimSongs):
-        similarSongHeader.append("song" + str(i + 1))
-
-    print("Data Cleaning")
-    start_time = timeit.default_timer()
-    cleanSongList = toCleanData(songsList)
-    print("Data Cleaning took %s seconds ---" % (timeit.default_timer() - start_time))
-
-    print("Building LSH")
-    start_time = timeit.default_timer()
-    forestLSH, minHashList = toBuildLSH(cleanSongList)
-    print("Building LSH took %s seconds ---" % (timeit.default_timer() - start_time))
-
-    print("Querying the similar songs")
-    similarSongsIdList = toQuerySimilarSongs(forestLSH, minHashList, numOfSimSongs)
-    print("Querying took %s seconds ---" % (timeit.default_timer() - start_time))
-
-    print("Saving results to the file: %s" % outputFile)
-    ### saving the result in a dataframe shape
-    results_df = pd.DataFrame(similarSongsIdList, columns=similarSongHeader)
-    ### writing the dataframe onto the file named in the variable simFile
-    results_df.to_csv(outputFile, sep=',', encoding='utf-8')
-    print("Finished saving the results \n")
-
 
 if __name__ == '__main__':
     main()
